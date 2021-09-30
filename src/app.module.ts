@@ -10,7 +10,7 @@ import { ServeStaticProvider } from './utils/serve-static.provider';
       name: 'default',
       logging: 'all',
       synchronize: true,
-      database: 'db/cars-db',
+      database: 'db/cars.sqlite',
       entities: ['dist/**/*.entity.js'],
     }),
     ServeStaticProvider.provider,

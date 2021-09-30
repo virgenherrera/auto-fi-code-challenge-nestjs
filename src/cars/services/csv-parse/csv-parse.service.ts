@@ -14,6 +14,7 @@ import { DtoValidate } from '../../../utils/dto-validate.util';
 import { ServeStaticProvider } from '../../../utils/serve-static.provider';
 import { RecordCarDto } from '../../dtos';
 import { ErrorRecord } from '../../interfaces/error-record.interface';
+import { CarService } from '../car/car.service';
 
 @Injectable()
 export class CsvParseService {
@@ -21,13 +22,19 @@ export class CsvParseService {
   private errorsFilePath: string;
   private lineCounter = 0;
 
+  constructor(private carService: CarService) {}
+
   async fromUploadedFile({ buffer, originalname }: Express.Multer.File) {
     await this.prepareErrorsFile(originalname);
     await this.parseCsvBuffer(buffer);
 
     const { folderName } = ServeStaticProvider;
+    const createdRows = await this.carService.getInsertCount();
 
-    return { errorsFile: `${folderName}/${this.errorsFileName}` };
+    return {
+      createdRows,
+      errorsFile: `${folderName}/${this.errorsFileName}`,
+    };
   }
 
   private async prepareErrorsFile(originalName: string) {
@@ -66,9 +73,9 @@ export class CsvParseService {
           RecordCarDto,
         );
 
-        console.log(recordCarDto);
+        await this.carService.addCar(recordCarDto);
       } catch (error) {
-        this.handleCsvParseError(error);
+        await this.handleCsvParseError(error);
       }
     }
   }
