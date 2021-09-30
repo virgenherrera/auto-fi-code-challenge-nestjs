@@ -5,14 +5,16 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { CsvFileInterceptor } from '../interceptors';
+import { CsvParseService } from '../services';
 
 @Controller('cars')
 export class CarsController {
+  constructor(private csvParseService: CsvParseService) {}
   @Post('csv-upload')
   @UseInterceptors(CsvFileInterceptor)
   async postCsvUpload(@UploadedFile() file: Express.Multer.File) {
-    Object.keys(file).forEach(key => console.log(key, file[key]));
+    const foo = await this.csvParseService.fromUploadedFile(file);
 
-    return true;
+    return foo;
   }
 }

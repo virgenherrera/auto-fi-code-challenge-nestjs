@@ -36,3 +36,9 @@ lerna-debug.log*
 
 # Env file
 .env
+
+# Sqlite files
+db/
+
+# public path
+public/
