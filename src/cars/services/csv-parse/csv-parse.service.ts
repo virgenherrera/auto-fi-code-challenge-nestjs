@@ -58,8 +58,9 @@ export class CsvParseService {
       skipEmptyLines: true,
     });
 
-    for await (const record of parser) {
+    for await (const rawRecord of parser) {
       try {
+        const record = this.mapRecord(rawRecord);
         const recordCarDto: RecordCarDto = await DtoValidate.transform(
           record,
           RecordCarDto,
@@ -67,9 +68,21 @@ export class CsvParseService {
 
         console.log(recordCarDto);
       } catch (error) {
-        await this.handleCsvParseError(error);
+        this.handleCsvParseError(error);
       }
     }
+  }
+
+  private mapRecord(rawRecord: any) {
+    const defaultValue: Record<string, string> = {};
+
+    return Object.keys(rawRecord).reduce((acc, rawKey) => {
+      const key = rawKey.trim();
+
+      acc[key] = rawRecord[rawKey];
+
+      return acc;
+    }, defaultValue);
   }
 
   private async handleCsvParseError(error: ErrorRecord) {

@@ -6,6 +6,7 @@ export class DtoValidate {
   static async transform(value: any, metatype: Type) {
     const instance = plainToClass(metatype, value, {
       excludeExtraneousValues: false,
+      enableImplicitConversion: true,
     });
     const validationErrors = await validate(instance, {
       whitelist: true,
