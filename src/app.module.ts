@@ -16,7 +16,7 @@ import { ServeStaticProvider } from './utils/serve-static.provider';
       logging: 'all',
       synchronize: true,
       database: 'db/cars.sqlite',
-      entities: ['dist/**/*.entity.js'],
+      entities: ['dist/**/*.entity.js', 'src/**/*.entity.ts'],
     }),
     ServeStaticProvider.provider,
     CarsModule,

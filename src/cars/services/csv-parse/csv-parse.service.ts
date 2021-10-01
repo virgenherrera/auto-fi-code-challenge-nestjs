@@ -94,7 +94,11 @@ export class CsvParseService {
           RecordCarDto,
         );
 
-        await this.carService.addCar(recordCarDto);
+        await this.carService.addCar(recordCarDto).catch(error => {
+          console.log(error);
+
+          throw error.message;
+        });
       } catch (error) {
         await this.handleCsvParseError(error);
       }
