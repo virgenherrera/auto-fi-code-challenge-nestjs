@@ -13,8 +13,6 @@ export class CarsController {
   @Post('csv-upload')
   @UseInterceptors(CsvFileInterceptor)
   async postCsvUpload(@UploadedFile() file: Express.Multer.File) {
-    const foo = await this.csvParseService.fromUploadedFile(file);
-
-    return foo;
+    return await this.csvParseService.fromUploadedFile(file);
   }
 }

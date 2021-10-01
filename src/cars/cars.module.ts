@@ -1,10 +1,15 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { CarsController } from './controllers/cars.controller';
-import { CsvParseService } from './services';
-import { CarService } from './services/car/car.service';
+import {
+  CarService,
+  ColumnDefinitionService,
+  CsvParseService,
+} from './services';
 
 @Module({
+  imports: [ConfigModule],
   controllers: [CarsController],
-  providers: [CsvParseService, CarService],
+  providers: [CsvParseService, CarService, ColumnDefinitionService],
 })
 export class CarsModule {}

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import * as parse from 'csv-parse';
 import {
   access,
@@ -14,22 +14,31 @@ import { DtoValidate } from '../../../utils/dto-validate.util';
 import { ServeStaticProvider } from '../../../utils/serve-static.provider';
 import { RecordCarDto } from '../../dtos';
 import { ErrorRecord } from '../../interfaces/error-record.interface';
+import { ProviderKeysMap } from '../../interfaces/provider-key-map.interface';
 import { CarService } from '../car/car.service';
+import { ColumnDefinitionService } from '../column-definition/column-definition.service';
 
 @Injectable()
 export class CsvParseService {
+  private providerKeyMap: ProviderKeysMap;
   private errorsFileName: string;
   private errorsFilePath: string;
   private lineCounter = 0;
 
-  constructor(private carService: CarService) {}
+  constructor(
+    private carService: CarService,
+    private columnDefinitionService: ColumnDefinitionService,
+  ) {}
 
   async fromUploadedFile({ buffer, originalname }: Express.Multer.File) {
-    await this.prepareErrorsFile(originalname);
+    const fileName = originalname.split('.').shift();
+    this.setProviderKeyMap(fileName);
+
+    await this.prepareErrorsFile(fileName);
     await this.parseCsvBuffer(buffer);
 
     const { folderName } = ServeStaticProvider;
-    const createdRows = await this.carService.getInsertCount();
+    const createdRows = await this.carService.flushSession();
 
     return {
       createdRows,
@@ -37,11 +46,23 @@ export class CsvParseService {
     };
   }
 
-  private async prepareErrorsFile(originalName: string) {
-    const { publicPath } = ServeStaticProvider;
-    const fileName = originalName.split('.').shift();
+  private setProviderKeyMap(fileName: string) {
+    const providerKeyMap =
+      this.columnDefinitionService.getProviderKeyMap(fileName);
 
-    this.errorsFileName = `${Date.now()}-${fileName}.csv`;
+    if (!providerKeyMap) {
+      throw new BadRequestException(
+        `provider for fileName: "${fileName}" not registered.`,
+      );
+    } else {
+      this.providerKeyMap = providerKeyMap;
+    }
+  }
+
+  private async prepareErrorsFile(fileName: string) {
+    const { publicPath } = ServeStaticProvider;
+
+    this.errorsFileName = `${Date.now()}-${encodeURI(fileName)}.csv`;
     this.errorsFilePath = join(publicPath, this.errorsFileName);
 
     if (!existsSync(publicPath)) {
@@ -84,7 +105,8 @@ export class CsvParseService {
     const defaultValue: Record<string, string> = {};
 
     return Object.keys(rawRecord).reduce((acc, rawKey) => {
-      const key = rawKey.trim();
+      const recordKey = rawKey.trim();
+      const key = this.providerKeyMap[recordKey];
 
       acc[key] = rawRecord[rawKey];
 

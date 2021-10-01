@@ -5,7 +5,7 @@ import { RecordCarDto } from '../../dtos';
 
 @Injectable()
 export class CarService {
-  private batchSize = 7;
+  private batchSize = 10;
   private insertedCount = 0;
   private dtoBucket: RecordCarDto[] = [];
 
@@ -17,10 +17,14 @@ export class CarService {
     }
   }
 
-  async getInsertCount() {
+  async flushSession() {
     await this.bucketStore();
 
-    return this.insertedCount;
+    const insertedCount = this.insertedCount;
+
+    this.insertedCount = 0;
+
+    return insertedCount;
   }
 
   private async bucketStore() {
